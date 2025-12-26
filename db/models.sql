@@ -52,6 +52,7 @@ CREATE TABLE letterboxd_movies (
 
     letterboxd_slug TEXT UNIQUE NOT NULL,
 
+    imdb_id TEXT,
     avg_rating REAL,
     rating_count INTEGER,
 
@@ -77,8 +78,6 @@ CREATE TABLE user_movie_interactions (
 
     rating REAL CHECK (rating >= 0 AND rating <= 5),
     liked BOOLEAN,
-    rewatched BOOLEAN,
-    watched_date DATE,
 
     source TEXT NOT NULL DEFAULT 'letterboxd',
 
