@@ -184,11 +184,15 @@ def parse_themes(soup) -> list[str]:
 def fetch_letterboxd_films(
     sort: str = "popular",
     page: int = 1,
+    genre: Optional[str] = None,
 ) -> list[dict]:
     headers = {"User-Agent": USER_AGENT}
 
     if sort == "popular":
-        url = f"{BASE_URL}/films/ajax/popular/page/{page}/"
+        if genre:
+            url = f"{BASE_URL}/films/ajax/popular/genre/{genre}/page/{page}/"
+        else:
+            url = f"{BASE_URL}/films/ajax/popular/page/{page}/"
     else:
         raise ValueError(f"unsupported sort: {sort}")
 

@@ -1,3 +1,4 @@
+from typing import Optional
 from dev.letterboxd import fetch_letterboxd_films, fetch_letterboxd_movie
 from dev.ingest import upsert_letterboxd_map, upsert_letterboxd_movie, upsert_movie
 from dev.tmdb import fetch_tmdb_movie
@@ -63,14 +64,15 @@ def process_film(conn, film: dict, seen_slugs: set[str]) -> bool:
     print(f"inserted: {slug}")
     return True
 
-def ingest_letterboxd_films():
+def ingest_letterboxd_films(genre: Optional[str] = None):
     conn = get_conn()
     seen_slugs = set()
 
     try:
         for page in range(1, PAGES + 1):
-            films = fetch_letterboxd_films(sort=SORT, page=page)
-            print(f"page {page}: {len(films)} films")
+            films = fetch_letterboxd_films(sort=SORT, page=page, genre=genre)
+            genre_label = f" ({genre})" if genre else ""
+            print(f"page {page}{genre_label}: {len(films)} films")
 
             for film in films:
                 process_film(conn, film, seen_slugs)
@@ -82,4 +84,5 @@ def ingest_letterboxd_films():
     update_user_taste_vectors()
 
 if __name__ == "__main__":
-    ingest_letterboxd_films()
+    genre = input("genre (or press enter for all): ").strip() or None
+    ingest_letterboxd_films(genre=genre)
