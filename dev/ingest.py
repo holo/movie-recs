@@ -1,8 +1,10 @@
 import time
-from typing import Optional, List
+from typing import Optional
+
 from dev.db import get_conn
 from dev.letterboxd import fetch_letterboxd_movie
-from dev.tmdb import get_tmdb_movie
+from dev.tmdb import fetch_tmdb_movie
+from dev.embeddings import embed_movies, update_user_taste_vectors
 from dev.config import LETTERBOXD_DELAY
 
 def upsert_user(conn, username: str) -> int:
@@ -82,25 +84,27 @@ def upsert_user_interaction(
                 created_at = NOW()
         """, (user_id, tmdb_id, rating, liked, source))
 
-def insert_movie(conn, tmdb_data: dict):
-    """
-    Map TMDB response to your movies table and insert
-    """
+def parse_release_year(release_date: Optional[str]) -> Optional[int]:
+    if not release_date:
+        return None
+    return int(release_date[:4])
+
+def extract_director(credits: dict) -> Optional[str]:
+    for crew_member in credits.get("crew", []):
+        if crew_member.get("job") == "Director":
+            return crew_member.get("name")
+    return None
+
+def extract_top_cast(credits: dict, limit: int = 5) -> list[str]:
+    return [c.get("name") for c in credits.get("cast", [])[:limit]]
+
+def upsert_movie(conn, tmdb_data: dict):
+    genres = [g["name"] for g in tmdb_data.get("genres", [])]
+    keywords = [k["name"] for k in tmdb_data.get("keywords", {}).get("keywords", [])]
+    director = extract_director(tmdb_data.get("credits", {}))
+    top_cast = extract_top_cast(tmdb_data.get("credits", {}))
+
     with conn.cursor() as cur:
-        genres = [g["name"] for g in tmdb_data.get("genres", [])]
-        director = None
-        top_cast = []
-        keywords = [k["name"] for k in tmdb_data.get("keywords", {}).get("keywords", [])]
-
-        # get director from credits
-        for c in tmdb_data.get("credits", {}).get("crew", []):
-            if c.get("job") == "Director":
-                director = c.get("name")
-                break
-
-        # top 5 cast
-        top_cast = [c.get("name") for c in tmdb_data.get("credits", {}).get("cast", [])[:5]]
-
         cur.execute("""
             INSERT INTO movies
             (tmdb_id, title, release_year, runtime, genres, director, top_cast, keywords,
@@ -125,7 +129,7 @@ def insert_movie(conn, tmdb_data: dict):
         """, (
             tmdb_data["id"],
             tmdb_data.get("title"),
-            int(tmdb_data.get("release_date", "0000-00-00")[:4]) if tmdb_data.get("release_date") else None,
+            parse_release_year(tmdb_data.get("release_date")),
             tmdb_data.get("runtime"),
             genres,
             director,
@@ -139,83 +143,90 @@ def insert_movie(conn, tmdb_data: dict):
             tmdb_data.get("backdrop_path"),
         ))
 
-# ----------------------------
-# Full ingestion function
-# ----------------------------
-def ingest_letterboxd_user(username: str, ratings: List[dict]) -> List[int]:
-    """
-    Ingest a Letterboxd user fully:
-      - ensures user exists
-      - fetches missing Letterboxd movie data
-      - fetches TMDB data if missing
-      - inserts into movies, letterboxd_movies, user interactions
-      - returns TMDB recommendations (list of IDs) for potential future ingestion
-    """
+def fetch_tmdb_id_from_map(conn, letterboxd_id: int) -> Optional[int]:
+    with conn.cursor() as cur:
+        cur.execute("SELECT tmdb_id FROM letterboxd_tmdb_map WHERE letterboxd_id = %s", (letterboxd_id,))
+        row = cur.fetchone()
+        return row["tmdb_id"] if row else None
+
+def movie_exists(conn, tmdb_id: int) -> bool:
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM movies WHERE tmdb_id = %s", (tmdb_id,))
+        return cur.fetchone() is not None
+
+def fetch_tmdb_id_for_rating(conn, rating: dict) -> Optional[int]:
+    tmdb_id = fetch_tmdb_id_from_map(conn, rating["letterboxd_id"])
+    
+    if not tmdb_id:
+        movie_data = fetch_letterboxd_movie(rating["letterboxd_slug"])
+        if movie_data:
+            tmdb_id = movie_data["tmdb_id"]
+            rating.update(movie_data)
+        time.sleep(LETTERBOXD_DELAY)
+    
+    return tmdb_id
+
+def fetch_and_insert_tmdb_movie(conn, tmdb_id: int) -> Optional[list[str]]:
+    if movie_exists(conn, tmdb_id):
+        return []
+
+    tmdb_data = fetch_tmdb_movie(tmdb_id, append_to_response="credits,keywords,recommendations")
+    if not tmdb_data:
+        return None
+
+    upsert_movie(conn, tmdb_data)
+    
+    recs = tmdb_data.get("recommendations", {}).get("results", [])
+    return [m["title"] for m in recs]
+
+def ingest_letterboxd_user(username: str, ratings: list[dict]) -> list[str]:
     conn = get_conn()
     recommendations = []
 
     try:
         user_id = upsert_user(conn, username)
 
-        for r in ratings:
-            # check if tmdb_id exists in map
-            tmdb_id = None
-            with conn.cursor() as cur:
-                cur.execute("SELECT tmdb_id FROM letterboxd_tmdb_map WHERE letterboxd_id = %s", (r["letterboxd_id"],))
-                row = cur.fetchone()
-                if row:
-                    tmdb_id = row["tmdb_id"]
-
-            # fetch letterboxd movie data if tmdb_id is missing
-            if not tmdb_id:
-                movie_data = fetch_letterboxd_movie(r["letterboxd_slug"])
-                if movie_data:
-                    tmdb_id = movie_data["tmdb_id"]
-                    r.update(movie_data)
-                time.sleep(LETTERBOXD_DELAY)
+        for rating in ratings:
+            tmdb_id = fetch_tmdb_id_for_rating(conn, rating)
 
             if not tmdb_id:
-                print(f"Skipping {r['letterboxd_slug']} — could not determine TMDB ID")
+                print(f"Skipping {rating['letterboxd_slug']} — could not determine TMDB ID")
                 continue
 
-            # fetch TMDB data if movie doesn't exist yet
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM movies WHERE tmdb_id = %s", (tmdb_id,))
-                if not cur.fetchone():
-                    tmdb_data = get_tmdb_movie(tmdb_id, append_to_response="credits,keywords,recommendations")
-                    if tmdb_data:
-                        insert_movie(conn, tmdb_data)
-                        # collect recommendation IDs
-                        recs = tmdb_data.get("recommendations", {}).get("results", [])
-                        recommendations.extend([m["title"] for m in recs])
+            recs = fetch_and_insert_tmdb_movie(conn, tmdb_id)
+            if recs is None:
+                print(f"TMDB data not found for TMDB ID {tmdb_id}, skipping movie {rating['letterboxd_slug']}")
+                continue
 
-            # upsert letterboxd map
-            upsert_letterboxd_map(conn, r["letterboxd_id"], r["letterboxd_slug"], tmdb_id)
+            recommendations.extend(recs)
 
-            # upsert letterboxd_movies
+            upsert_letterboxd_map(conn, rating["letterboxd_id"], rating["letterboxd_slug"], tmdb_id)
+
             upsert_letterboxd_movie(
                 conn,
                 tmdb_id=tmdb_id,
-                letterboxd_id=r["letterboxd_id"],
-                letterboxd_slug=r["letterboxd_slug"],
-                imdb_id=r.get("imdb_id"),
-                avg_rating=r.get("avg_rating"),
-                rating_count=r.get("rating_count"),
-                themes=r.get("themes"),
+                letterboxd_id=rating["letterboxd_id"],
+                letterboxd_slug=rating["letterboxd_slug"],
+                imdb_id=rating.get("imdb_id"),
+                avg_rating=rating.get("avg_rating"),
+                rating_count=rating.get("rating_count"),
+                themes=rating.get("themes"),
             )
 
-            # upsert user interaction
             upsert_user_interaction(
                 conn,
                 user_id=user_id,
                 tmdb_id=tmdb_id,
-                rating=r.get("rating"),
-                liked=r.get("liked"),
-                source=r.get("source", "letterboxd"),
+                rating=rating.get("rating"),
+                liked=rating.get("liked"),
+                source=rating.get("source", "letterboxd"),
             )
 
         conn.commit()
     finally:
         conn.close()
+
+    embed_movies()
+    update_user_taste_vectors()
 
     return recommendations

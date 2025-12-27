@@ -1,3 +1,3 @@
-from dev.tmdb import get_tmdb_movie
+from dev.tmdb import fetch_tmdb_movie
 
-print(get_tmdb_movie(550, 'credits,keywords,recommendations'))
+print(fetch_tmdb_movie(550, 'credits,keywords,recommendations'))

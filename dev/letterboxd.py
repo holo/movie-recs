@@ -180,3 +180,41 @@ def parse_themes(soup) -> list[str]:
             themes.append(text)
 
     return themes
+
+def fetch_letterboxd_films(
+    sort: str = "popular",
+    page: int = 1,
+) -> list[dict]:
+    headers = {"User-Agent": USER_AGENT}
+
+    if sort == "popular":
+        url = f"{BASE_URL}/films/ajax/popular/page/{page}/"
+    else:
+        raise ValueError(f"unsupported sort: {sort}")
+
+    resp = requests.get(url, headers=headers)
+    if resp.status_code != 200:
+        return []
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+    items = soup.select("li.posteritem")
+    results = []
+
+    for item in items:
+        component = item.select_one(".react-component")
+        if not component:
+            continue
+
+        slug = component.get("data-item-slug")
+        film_id = component.get("data-film-id")
+
+        if not slug:
+            continue
+
+        results.append({
+            "letterboxd_slug": slug,
+            "letterboxd_id": int(film_id) if film_id else None,
+        })
+
+    time.sleep(LETTERBOXD_DELAY)
+    return results
