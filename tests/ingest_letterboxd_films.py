@@ -6,7 +6,7 @@ from dev.embeddings import embed_movies, update_user_taste_vectors
 from dev.db import get_conn
 
 SORT = "popular"
-PAGES = 5
+PAGES = 25
 
 def film_already_mapped(conn, slug: str) -> bool:
     with conn.cursor() as cur:

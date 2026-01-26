@@ -25,7 +25,7 @@ def generate_movie_text(movie: dict) -> str:
     ]
     return "\n".join(parts)
 
-def fetch_movies_without_embeddings():
+def fetch_movies_without_embeddings() -> list[dict]:
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -72,7 +72,7 @@ def embed_movies(batch_size: int = 64):
     finally:
         conn.close()
 
-def fetch_user_interactions(user_id: int):
+def fetch_user_interactions(user_id: int) -> list[dict]:
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -98,35 +98,85 @@ def parse_embedding(embedding) -> Optional[list]:
 
     return embedding
 
-def calculate_weighted_embeddings(rows: list) -> Optional[np.ndarray]:
-    embeddings_list = []
+def calculate_weighted_embeddings(rows: list[dict]) -> Optional[np.ndarray]:
+    embeddings = []
     weights = []
 
     for r in rows:
         emb = parse_embedding(r["embedding"])
-        if not emb:
+        if emb is None:
             continue
 
-        embeddings_list.append(emb)
-
         if r["rating"] is not None:
-            weights.append(r["rating"])
+            weight = (r["rating"] - 2.5) / 2.5
         elif r.get("liked"):
-            weights.append(4.0)
+            weight = 0.8
         else:
-            weights.append(0.0)
+            continue
 
-    embeddings_array = np.array(embeddings_list, dtype=np.float32)
-    weights_array = np.array(weights, dtype=np.float32)
+        embeddings.append(emb)
+        weights.append(weight)
 
-    mask = weights_array > 0
-    embeddings_array = embeddings_array[mask]
-    weights_array = weights_array[mask]
-
-    if len(embeddings_array) == 0:
+    if not embeddings:
         return None
 
-    return np.average(embeddings_array, axis=0, weights=weights_array)
+    embeddings = np.array(embeddings, dtype=np.float32)
+    weights = np.array(weights, dtype=np.float32)
+
+    return np.average(embeddings, axis=0, weights=weights)
+
+def calculate_residual_taste_vector(rows: list[dict]) -> Optional[np.ndarray]:
+    if len(rows) < 3:
+        return None
+    
+    embeddings = []
+    ratings = []
+    
+    for r in rows:
+        emb = parse_embedding(r["embedding"])
+        if emb is None:
+            continue
+        
+        if r.get("rating") is not None:
+            rating = r["rating"]
+        elif r.get("liked"):
+            rating = 4.0
+        else:
+            continue
+        
+        embeddings.append(emb)
+        ratings.append(rating)
+    
+    if len(embeddings) < 3:
+        return None
+    
+    embeddings = np.array(embeddings, dtype=np.float32)
+    ratings = np.array(ratings, dtype=np.float32)
+    
+    if np.any(np.isnan(ratings)) or np.any(np.isinf(ratings)):
+        print(f"Warning: Invalid ratings detected, skipping user")
+        return None
+    
+    if np.std(ratings) < 0.01:
+        return np.mean(embeddings, axis=0)
+    
+    centered_ratings = ratings - np.mean(ratings)
+    
+    taste_vector = np.zeros(768, dtype=np.float32)
+    for emb, rating in zip(embeddings, centered_ratings):
+        taste_vector += emb * rating
+    
+    sum_abs_ratings = np.sum(np.abs(centered_ratings))
+    if sum_abs_ratings < 1e-8:
+        return np.mean(embeddings, axis=0)
+    
+    taste_vector /= sum_abs_ratings
+    
+    if np.any(np.isnan(taste_vector)) or np.any(np.isinf(taste_vector)):
+        print(f"Warning: Invalid taste vector generated, falling back to average")
+        return np.mean(embeddings, axis=0)
+    
+    return taste_vector
 
 def update_user_taste_vector(conn, user_id: int, taste_vector: np.ndarray):
     with conn.cursor() as cur:
@@ -151,7 +201,7 @@ def update_user_taste_vectors():
                 print(f"User {user_id} has no embeddings, skipping.")
                 continue
 
-            taste_vector = calculate_weighted_embeddings(rows)
+            taste_vector = calculate_residual_taste_vector(rows)
 
             if taste_vector is None:
                 print(f"User {user_id} has no weighted embeddings, skipping.")
