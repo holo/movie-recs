@@ -1,65 +1,958 @@
-import Image from "next/image";
+"use client";
+
+import { Search, Popcorn, Star } from "lucide-react";
+import { useState } from "react";
+
+const films = [
+  {
+    title: "Interstellar",
+    genres: ["Adventure", "Drama", "Science Fiction"],
+    runtime: 169,
+    tmdb_id: 157336,
+    director: "Christopher Nolan",
+    keywords: [
+      "rescue",
+      "future",
+      "spacecraft",
+      "race against time",
+      "artificial intelligence (a.i.)",
+      "nasa",
+      "time warp",
+      "dystopia",
+      "expedition",
+      "space travel",
+      "wormhole",
+      "famine",
+      "hibernation",
+      "black hole",
+      "quantum mechanics",
+      "family relationships",
+      "space",
+      "robot",
+      "astronaut",
+      "scientist",
+      "single father",
+      "farmer",
+      "space station",
+      "curious",
+      "space adventure",
+      "time paradox",
+      "cryonics",
+      "father daughter relationship",
+      "2060s",
+      "cornfield",
+      "time manipulation",
+      "admiring",
+      "amused",
+      "در میان ستاره ای",
+      "در میان ستارگان",
+    ],
+    overview:
+      "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
+    top_cast: [
+      "Matthew McConaughey",
+      "Anne Hathaway",
+      "Michael Caine",
+      "Jessica Chastain",
+      "Casey Affleck",
+    ],
+    poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+    release_year: 2014,
+    backdrop_path: "/5XNQBqnBwPA9yT0jZ0p3s8bbLh0.jpg",
+    tmdb_vote_avg: 8.5,
+    tmdb_popularity: 43.9852,
+    tmdb_vote_count: 38457,
+  },
+  {
+    title: "Inception",
+    genres: ["Action", "Science Fiction", "Adventure"],
+    runtime: 148,
+    tmdb_id: 27205,
+    director: "Christopher Nolan",
+    keywords: [
+      "rescue",
+      "mission",
+      "dreams",
+      "airplane",
+      "paris, france",
+      "virtual reality",
+      "kidnapping",
+      "philosophy",
+      "spy",
+      "allegory",
+      "manipulation",
+      "car crash",
+      "heist",
+      "memory",
+      "architecture",
+      "los angeles, california",
+      "death",
+      "dream world",
+      "insecure",
+      "subconscious",
+      "intense",
+      "dream",
+    ],
+    overview:
+      "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
+    top_cast: [
+      "Leonardo DiCaprio",
+      "Joseph Gordon-Levitt",
+      "Ken Watanabe",
+      "Tom Hardy",
+      "Elliot Page",
+    ],
+    poster_path: "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+    release_year: 2010,
+    backdrop_path: "/ii8QGacT3MXESqBckQlyrATY0lT.jpg",
+    tmdb_vote_avg: 8.371,
+    tmdb_popularity: 35.3265,
+    tmdb_vote_count: 38386,
+  },
+  {
+    title: "The Dark Knight",
+    genres: ["Drama", "Action", "Crime", "Thriller"],
+    runtime: 152,
+    tmdb_id: 155,
+    director: "Christopher Nolan",
+    keywords: [
+      "sadism",
+      "chaos",
+      "secret identity",
+      "crime fighter",
+      "superhero",
+      "anti hero",
+      "scarecrow",
+      "based on comic",
+      "vigilante",
+      "organized crime",
+      "tragic hero",
+      "anti villain",
+      "criminal mastermind",
+      "district attorney",
+      "super power",
+      "super villain",
+      "neo-noir",
+      "bold",
+    ],
+    overview:
+      "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
+    top_cast: [
+      "Christian Bale",
+      "Heath Ledger",
+      "Aaron Eckhart",
+      "Michael Caine",
+      "Maggie Gyllenhaal",
+    ],
+    poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    release_year: 2008,
+    backdrop_path: "/dGOZdWOB8OpZFVziEOUFhox5wz9.jpg",
+    tmdb_vote_avg: 8.524,
+    tmdb_popularity: 24.789,
+    tmdb_vote_count: 34865,
+  },
+  {
+    title: "The Avengers",
+    genres: ["Science Fiction", "Action", "Adventure"],
+    runtime: 143,
+    tmdb_id: 24428,
+    director: "Joss Whedon",
+    keywords: [
+      "new york city",
+      "superhero",
+      "shield",
+      "based on comic",
+      "alien invasion",
+      "superhero team",
+      "aftercreditsstinger",
+      "duringcreditsstinger",
+      "marvel cinematic universe (mcu)",
+    ],
+    overview:
+      "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
+    top_cast: [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Mark Ruffalo",
+      "Chris Hemsworth",
+      "Scarlett Johansson",
+    ],
+    poster_path: "/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg",
+    release_year: 2012,
+    backdrop_path: "/9BBTo63ANSmhC4e6r62OJFuK2GL.jpg",
+    tmdb_vote_avg: 7.884,
+    tmdb_popularity: 52.0524,
+    tmdb_vote_count: 34627,
+  },
+  {
+    title: "Avatar",
+    genres: ["Action", "Adventure", "Fantasy", "Science Fiction"],
+    runtime: 162,
+    tmdb_id: 19995,
+    director: "James Cameron",
+    keywords: [
+      "paraplegic",
+      "attachment to nature",
+      "culture clash",
+      "indigenous",
+      "space travel",
+      "space colony",
+      "tribe",
+      "alien planet",
+      "distant future",
+      "marine",
+      "battle",
+      "love affair",
+      "scientist",
+      "nature",
+      "native peoples",
+      "power relations",
+      "tribal customs",
+      "tribal people",
+      "tribal chief",
+      "cryonics",
+      "spiritual community",
+      "22nd century",
+      "save the planet",
+      "racial discrimination",
+      "soldiers",
+      "stereoscopic film",
+      "awestruck",
+      "bold",
+      "exhilarated",
+    ],
+    overview:
+      "In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization.",
+    top_cast: [
+      "Sam Worthington",
+      "Zoe Saldaña",
+      "Sigourney Weaver",
+      "Stephen Lang",
+      "Michelle Rodriguez",
+    ],
+    poster_path: "/gKY6q7SjCkAU6FqvqWybDYgUKIF.jpg",
+    release_year: 2009,
+    backdrop_path: "/7JNzw1tSZZEgsBw6lu0VfO2X2Ef.jpg",
+    tmdb_vote_avg: 7.597,
+    tmdb_popularity: 121.8081,
+    tmdb_vote_count: 33039,
+  },
+  {
+    title: "Deadpool",
+    genres: ["Action", "Adventure", "Comedy"],
+    runtime: 108,
+    tmdb_id: 293660,
+    director: "Tim Miller",
+    keywords: [
+      "superhero",
+      "anti hero",
+      "mercenary",
+      "based on comic",
+      "aftercreditsstinger",
+      "duringcreditsstinger",
+    ],
+    overview:
+      "The origin story of former Special Forces operative turned mercenary Wade Wilson, who, after being subjected to a rogue experiment that leaves him with accelerated healing powers, adopts the alter ego Deadpool. Armed with his new abilities and a dark, twisted sense of humor, Deadpool hunts down the man who nearly destroyed his life.",
+    top_cast: [
+      "Ryan Reynolds",
+      "Morena Baccarin",
+      "Ed Skrein",
+      "T.J. Miller",
+      "Gina Carano",
+    ],
+    poster_path: "/3E53WEZJqP6aM84D8CckXx4pIHw.jpg",
+    release_year: 2016,
+    backdrop_path: "/rFj9IKlL75B2pXhZA60jkNWvxeW.jpg",
+    tmdb_vote_avg: 7.623,
+    tmdb_popularity: 12.9306,
+    tmdb_vote_count: 32164,
+  },
+  {
+    title: "Avengers: Infinity War",
+    genres: ["Adventure", "Action", "Science Fiction"],
+    runtime: 149,
+    tmdb_id: 299536,
+    director: "Joe Russo",
+    keywords: [
+      "sacrifice",
+      "magic",
+      "superhero",
+      "based on comic",
+      "space",
+      "battlefield",
+      "genocide",
+      "magical object",
+      "super power",
+      "superhero team",
+      "aftercreditsstinger",
+      "marvel cinematic universe (mcu)",
+      "cosmic",
+    ],
+    overview:
+      "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.",
+    top_cast: [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Chris Hemsworth",
+      "Josh Brolin",
+      "Mark Ruffalo",
+    ],
+    poster_path: "/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+    release_year: 2018,
+    backdrop_path: "/mDfJG3LC3Dqb67AZ52x3Z0jU0uB.jpg",
+    tmdb_vote_avg: 8.235,
+    tmdb_popularity: 24.4723,
+    tmdb_vote_count: 31250,
+  },
+  {
+    title: "Fight Club",
+    genres: ["Drama", "Thriller"],
+    runtime: 139,
+    tmdb_id: 550,
+    director: "David Fincher",
+    keywords: [
+      "dual identity",
+      "rage and hate",
+      "based on novel or book",
+      "nihilism",
+      "fight",
+      "support group",
+      "dystopia",
+      "insomnia",
+      "alter ego",
+      "breaking the fourth wall",
+      "split personality",
+      "quitting a job",
+      "dissociative identity disorder",
+      "self destructiveness",
+    ],
+    overview:
+      'A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground "fight clubs" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.',
+    top_cast: [
+      "Edward Norton",
+      "Brad Pitt",
+      "Helena Bonham Carter",
+      "Meat Loaf",
+      "Jared Leto",
+    ],
+    poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+    release_year: 1999,
+    backdrop_path: "/5TiwfWEaPSwD20uwXjCTUqpQX70.jpg",
+    tmdb_vote_avg: 8.438,
+    tmdb_popularity: 22.7711,
+    tmdb_vote_count: 31123,
+  },
+  {
+    title: "Pulp Fiction",
+    genres: ["Thriller", "Crime", "Comedy"],
+    runtime: 154,
+    tmdb_id: 680,
+    director: "Quentin Tarantino",
+    keywords: [
+      "drug dealer",
+      "stolen money",
+      "crime boss",
+      "redemption",
+      "los angeles, california",
+      "theft",
+      "nonlinear timeline",
+      "multiple storylines",
+      "neo-noir",
+      "wonder",
+      "absurd",
+    ],
+    overview:
+      "A burger-loving hit man, his philosophical partner, a drug-addled gangster's moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip back and forth in time.",
+    top_cast: [
+      "John Travolta",
+      "Samuel L. Jackson",
+      "Uma Thurman",
+      "Bruce Willis",
+      "Ving Rhames",
+    ],
+    poster_path: "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
+    release_year: 1994,
+    backdrop_path: "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
+    tmdb_vote_avg: 8.486,
+    tmdb_popularity: 18.8162,
+    tmdb_vote_count: 29416,
+  },
+  {
+    title: "The Shawshank Redemption",
+    genres: ["Drama", "Crime"],
+    runtime: 142,
+    tmdb_id: 278,
+    director: "Frank Darabont",
+    keywords: [
+      "prison",
+      "friendship",
+      "police brutality",
+      "corruption",
+      "based on novel or book",
+      "freedom",
+      "hope",
+      "prison cell",
+      "delinquent",
+      "redemption",
+      "parole board",
+      "prison escape",
+      "wrongful imprisonment",
+      "interracial friendship",
+      "framed for murder",
+      "1940s",
+      "voiceover",
+    ],
+    overview:
+      "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
+    top_cast: [
+      "Tim Robbins",
+      "Morgan Freeman",
+      "Bob Gunton",
+      "William Sadler",
+      "Clancy Brown",
+    ],
+    poster_path: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
+    release_year: 1994,
+    backdrop_path: "/zfbjgQE1uSd9wiPTX4VzsLi0rGG.jpg",
+    tmdb_vote_avg: 8.714,
+    tmdb_popularity: 34.5043,
+    tmdb_vote_count: 29396,
+  },
+  {
+    title: "Guardians of the Galaxy",
+    genres: ["Action", "Science Fiction", "Adventure"],
+    runtime: 121,
+    tmdb_id: 118340,
+    director: "James Gunn",
+    keywords: [
+      "spacecraft",
+      "based on comic",
+      "space",
+      "orphan",
+      "adventurer",
+      "aftercreditsstinger",
+      "duringcreditsstinger",
+      "marvel cinematic universe (mcu)",
+    ],
+    overview:
+      "Light years from Earth, 26 years after being abducted, Peter Quill finds himself the prime target of a manhunt after discovering an orb wanted by Ronan the Accuser.",
+    top_cast: [
+      "Chris Pratt",
+      "Zoe Saldaña",
+      "Dave Bautista",
+      "Vin Diesel",
+      "Bradley Cooper",
+    ],
+    poster_path: "/r7vmZjiyZw9rpJMQJdXpjgiCOk9.jpg",
+    release_year: 2014,
+    backdrop_path: "/uLtVbjvS1O7gXL8lUOwsFOH4man.jpg",
+    tmdb_vote_avg: 7.905,
+    tmdb_popularity: 7.227,
+    tmdb_vote_count: 29122,
+  },
+  {
+    title: "Forrest Gump",
+    genres: ["Comedy", "Drama", "Romance"],
+    runtime: 142,
+    tmdb_id: 13,
+    director: "Robert Zemeckis",
+    keywords: [
+      "new year's eve",
+      "vietnam war",
+      "vietnam veteran",
+      "mentally disabled",
+      "friendship",
+      "usa president",
+      "washington dc, usa",
+      "post-traumatic stress disorder (ptsd)",
+      "waitress",
+      "based on novel or book",
+      "hippie",
+      "single parent",
+      "parent child relationship",
+      "optimism",
+      "1970s",
+      "drug addiction",
+      "autism",
+      "alabama",
+      "black panther party",
+      "bus stop",
+      "family relationships",
+      "chameleon",
+      "single mother",
+      "military",
+      "anti war protest",
+      "1960s",
+      "college american football",
+      "mother son relationship",
+      "america",
+      "feel-good",
+    ],
+    overview:
+      "A man with a low IQ has accomplished great things in his life and been present during significant historic events—in each case, far exceeding what anyone imagined he could do. But despite all he has achieved, his one true love eludes him.",
+    top_cast: [
+      "Tom Hanks",
+      "Robin Wright",
+      "Gary Sinise",
+      "Sally Field",
+      "Mykelti Williamson",
+    ],
+    poster_path: "/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
+    release_year: 1994,
+    backdrop_path: "/67HggiWaP9ZLv5sPYmyRV37yAJM.jpg",
+    tmdb_vote_avg: 8.462,
+    tmdb_popularity: 21.9786,
+    tmdb_vote_count: 28985,
+  },
+  {
+    title: "Harry Potter and the Philosopher's Stone",
+    genres: ["Adventure", "Fantasy"],
+    runtime: 152,
+    tmdb_id: 671,
+    director: "Chris Columbus",
+    keywords: [
+      "witch",
+      "school friend",
+      "friendship",
+      "london, england",
+      "based on novel or book",
+      "magic",
+      "boarding school",
+      "male friendship",
+      "child hero",
+      "school of witchcraft",
+      "chosen one",
+      "bullying",
+      "school",
+      "ghost",
+      "fantasy world",
+      "wizard",
+      "pre-teen",
+      "children's adventure",
+      "based on young adult novel",
+      "found family",
+      "owl",
+      "male female friendship",
+      "teen fantasy",
+    ],
+    overview:
+      "Harry Potter has lived under the stairs at his aunt and uncle's house his whole life. But on his 11th birthday, he learns he's a powerful wizard—with a place waiting for him at the Hogwarts School of Witchcraft and Wizardry. As he learns to harness his newfound powers with the help of the school's kindly headmaster, Harry uncovers the truth about his parents' deaths—and about the villain who's to blame.",
+    top_cast: [
+      "Daniel Radcliffe",
+      "Rupert Grint",
+      "Emma Watson",
+      "Richard Harris",
+      "Tom Felton",
+    ],
+    poster_path: "/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg",
+    release_year: 2001,
+    backdrop_path: "/bfh9Z3Ghz4FOJAfLOAhmc3ccnHU.jpg",
+    tmdb_vote_avg: 7.899,
+    tmdb_popularity: 29.9666,
+    tmdb_vote_count: 28924,
+  },
+  {
+    title: "Iron Man",
+    genres: ["Action", "Science Fiction", "Adventure"],
+    runtime: 126,
+    tmdb_id: 1726,
+    director: "Jon Favreau",
+    keywords: [
+      "middle east",
+      "superhero",
+      "arms dealer",
+      "malibu",
+      "based on comic",
+      "aftercreditsstinger",
+      "marvel cinematic universe (mcu)",
+      "counterterrorism",
+    ],
+    overview:
+      "After being held captive in an Afghan cave, billionaire engineer Tony Stark creates a unique weaponized suit of armor to fight evil.",
+    top_cast: [
+      "Robert Downey Jr.",
+      "Terrence Howard",
+      "Jeff Bridges",
+      "Gwyneth Paltrow",
+      "Leslie Bibb",
+    ],
+    poster_path: "/78lPtwv72eTNqFW9COBYI0dWDJa.jpg",
+    release_year: 2008,
+    backdrop_path: "/cKvDv2LpwVEqbdXWoQl4XgGN6le.jpg",
+    tmdb_vote_avg: 7.654,
+    tmdb_popularity: 19.264,
+    tmdb_vote_count: 27562,
+  },
+  {
+    title: "Django Unchained",
+    genres: ["Drama", "Western"],
+    runtime: 165,
+    tmdb_id: 68718,
+    director: "Quentin Tarantino",
+    keywords: [
+      "rescue",
+      "friendship",
+      "bounty hunter",
+      "texas",
+      "slavery",
+      "plantation",
+      "revenge",
+      "racism",
+      "slave trade",
+      "black slave",
+      "19th century",
+      "white supremacy",
+      "anxious",
+      "old west",
+      "mississippi",
+    ],
+    overview:
+      "With the help of a German bounty hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.",
+    top_cast: [
+      "Jamie Foxx",
+      "Christoph Waltz",
+      "Leonardo DiCaprio",
+      "Kerry Washington",
+      "Samuel L. Jackson",
+    ],
+    poster_path: "/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg",
+    release_year: 2012,
+    backdrop_path: "/n2eUT4zQA2yYcKOgAFidgOyiFoH.jpg",
+    tmdb_vote_avg: 8.185,
+    tmdb_popularity: 18.7011,
+    tmdb_vote_count: 27348,
+  },
+  {
+    title: "The Matrix",
+    genres: ["Action", "Science Fiction"],
+    runtime: 136,
+    tmdb_id: 603,
+    director: "Lana Wachowski",
+    keywords: [
+      "man vs machine",
+      "martial arts",
+      "kung fu",
+      "dreams",
+      "artificial intelligence (a.i.)",
+      "saving the world",
+      "hacker",
+      "self sacrifice",
+      "virtual reality",
+      "fight",
+      "prophecy",
+      "truth",
+      "philosophy",
+      "dystopia",
+      "insurgence",
+      "simulated reality ",
+      "cyberpunk",
+      "dream world",
+      "messiah",
+      "philosophical",
+      "action hero",
+      "gnosticism",
+      "allegory of the cave",
+      "dystopian sci-fi",
+    ],
+    overview:
+      "Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.",
+    top_cast: [
+      "Keanu Reeves",
+      "Laurence Fishburne",
+      "Carrie-Anne Moss",
+      "Hugo Weaving",
+      "Gloria Foster",
+    ],
+    poster_path: "/p96dm7sCMn4VYAStA6siNz30G1r.jpg",
+    release_year: 1999,
+    backdrop_path: "/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg",
+    tmdb_vote_avg: 8.236,
+    tmdb_popularity: 20.6641,
+    tmdb_vote_count: 27119,
+  },
+  {
+    title: "Joker",
+    genres: ["Crime", "Thriller", "Drama"],
+    runtime: 122,
+    tmdb_id: 475557,
+    director: "Todd Phillips",
+    keywords: [
+      "dreams",
+      "street gang",
+      "society",
+      "psychopath",
+      "clown",
+      "villain",
+      "based on comic",
+      "murder",
+      "psychological thriller",
+      "criminal mastermind",
+      "mental illness",
+      "anarchy",
+      "character study",
+      "clown makeup",
+      "prophetic",
+      "subway train",
+      "social realism",
+      "supervillain",
+      "tv host",
+      "1980s",
+      "mother son relationship",
+      "origin story",
+      "dramatic",
+      "falling into madness",
+      "intense",
+    ],
+    overview:
+      "During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.",
+    top_cast: [
+      "Joaquin Phoenix",
+      "Robert De Niro",
+      "Zazie Beetz",
+      "Frances Conroy",
+      "Brett Cullen",
+    ],
+    poster_path: "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+    release_year: 2019,
+    backdrop_path: "/hO7KbdvGOtDdeg0W4Y5nKEHeDDh.jpg",
+    tmdb_vote_avg: 8.129,
+    tmdb_popularity: 13.7592,
+    tmdb_vote_count: 27084,
+  },
+  {
+    title: "Avengers: Endgame",
+    genres: ["Adventure", "Science Fiction", "Action"],
+    runtime: 181,
+    tmdb_id: 299534,
+    director: "Anthony Russo",
+    keywords: [
+      "superhero",
+      "time travel",
+      "space travel",
+      "time machine",
+      "based on comic",
+      "sequel",
+      "alien invasion",
+      "superhero team",
+      "marvel cinematic universe (mcu)",
+      "alternate timeline",
+      "father daughter relationship",
+      "sister sister relationship",
+      "awestruck",
+      "powerful",
+      "vibrant",
+    ],
+    overview:
+      "After the devastating events of Avengers: Infinity War, the universe is in ruins due to the efforts of the Mad Titan, Thanos. With the help of remaining allies, the Avengers must assemble once more in order to undo Thanos' actions and restore order to the universe once and for all, no matter what consequences may be in store.",
+    top_cast: [
+      "Robert Downey Jr.",
+      "Chris Evans",
+      "Mark Ruffalo",
+      "Chris Hemsworth",
+      "Scarlett Johansson",
+    ],
+    poster_path: "/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg",
+    release_year: 2019,
+    backdrop_path: "/9wXPKruA6bWYk2co5ix6fH59Qr8.jpg",
+    tmdb_vote_avg: 8.237,
+    tmdb_popularity: 18.4368,
+    tmdb_vote_count: 27032,
+  },
+  {
+    title: "The Lord of the Rings: The Fellowship of the Ring",
+    genres: ["Adventure", "Fantasy", "Action"],
+    runtime: 179,
+    tmdb_id: 120,
+    director: "Peter Jackson",
+    keywords: [
+      "based on novel or book",
+      "elves",
+      "dwarf",
+      "magic",
+      "obsession",
+      "bravery",
+      "fireworks",
+      "mine",
+      "maze",
+      "mountain",
+      "castle",
+      "birthday party",
+      "troll",
+      "battle",
+      "demon",
+      "blizzard",
+      "uncle nephew relationship",
+      "fantasy world",
+      "journey",
+      "ring",
+      "invisibility",
+      "live action and animation",
+      "hero's journey",
+      "wraith",
+      "sword and sorcery",
+      "trekking",
+      "good versus evil",
+    ],
+    overview:
+      "Young hobbit Frodo Baggins, after inheriting a mysterious ring from his uncle Bilbo, must leave his home in order to keep it from falling into the hands of its evil creator. Along the way, a fellowship is formed to protect the ringbearer and make sure that the ring arrives at its final destination: Mt. Doom, the only place where it can be destroyed.",
+    top_cast: [
+      "Elijah Wood",
+      "Ian McKellen",
+      "Viggo Mortensen",
+      "Sean Astin",
+      "Ian Holm",
+    ],
+    poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+    release_year: 2001,
+    backdrop_path: "/x2RS3uTcsJJ9IfjNPcgDmukoEcQ.jpg",
+    tmdb_vote_avg: 8.427,
+    tmdb_popularity: 25.515,
+    tmdb_vote_count: 26714,
+  },
+  {
+    title: "Titanic",
+    genres: ["Drama", "Romance"],
+    runtime: 194,
+    tmdb_id: 597,
+    director: "James Cameron",
+    keywords: [
+      "ship",
+      "soulmates",
+      "panic",
+      "shipwreck",
+      "atlantic ocean",
+      "evacuation",
+      "iceberg",
+      "titanic",
+      "forbidden love",
+      "ocean liner",
+      "based on true story",
+      "rich woman poor man",
+      "romance",
+      "love",
+      "tragedy",
+      "tragic love",
+      "historical fiction",
+      "class differences",
+      "love affair",
+      "death",
+      "historical event",
+      "lifeboat",
+      "star crossed lovers",
+      "sinking ship",
+      "rich snob",
+      "tragic romance",
+      "disaster movie",
+      "1910s",
+    ],
+    overview:
+      "101-year-old Rose DeWitt Bukater tells the story of her life aboard the Titanic, 84 years later. A young Rose boards the ship with her mother and fiancé. Meanwhile, Jack Dawson and Fabrizio De Rossi win third-class tickets aboard the ship. Rose tells the whole story from Titanic's departure through to its death—on its first and last voyage—on April 15, 1912.",
+    top_cast: [
+      "Leonardo DiCaprio",
+      "Kate Winslet",
+      "Billy Zane",
+      "Kathy Bates",
+      "Frances Fisher",
+    ],
+    poster_path: "/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg",
+    release_year: 1997,
+    backdrop_path: "/xXCuto8YVp5RFqBJ7yKmVmLOWpF.jpg",
+    tmdb_vote_avg: 7.903,
+    tmdb_popularity: 31.7079,
+    tmdb_vote_count: 26570,
+  },
+];
+
+const stats = {
+  avgRating: 3.59,
+  watched: 225,
+  likes: 5,
+};
 
 export default function Home() {
+  const [username, setUsername] = useState("");
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="flex min-h-screen items-center bg-neutral-950 bg-dotted flex-col pt-48 px-64 gap-6">
+      <main className="flex flex-col gap-6 max-w-104">
+        <h1 className="text-center font-medium text-6xl leading-14 text-neutral-50 ">
+          Hero text here{" "}
+          <span className="bg-linear-to-r from-zinc-200 to-zinc-500 bg-clip-text text-transparent">
+            KEYWORD
+          </span>
+        </h1>
+        <p className="text-neutral-400 text-center">
+          Enter your Letterboxd username and discover films tailored to your
+          taste
+        </p>
+        <div className="w-full flex bg-neutral-900 border border-neutral-800 rounded-2xl p-2 text-neutral-600 items-center justify-between">
+          <div className="flex gap-2.5 p-2 items-center">
+            <Search className="text-neutral-500 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Enter username..."
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={`bg-transparent outline-none ${
+                username ? "text-neutral-400" : "text-neutral-600"
+              }`}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+          <button
+            className={`px-4 py-3 text-neutral-900 font-medium rounded-xl transition-colors duration-300 cursor-pointer ${
+              username ? "bg-neutral-100" : "bg-neutral-400"
+            }`}
           >
-            Documentation
-          </a>
+            Discover
+          </button>
         </div>
       </main>
+
+      {/* results */}
+      <section className="flex flex-col items-center gap-4 w-full bg-neutral-950">
+        <div className="flex gap-2">
+          <div className="flex flex-col items-center gap-1 w-16">
+            <p className="text-neutral-400 font-medium">{stats.avgRating}</p>
+            <p className="text-xs text-neutral-600">Avg Rating</p>
+          </div>
+          <div className="w-px bg-neutral-800" />
+          <div className="flex flex-col items-center gap-1 w-16">
+            <p className="text-neutral-400 font-medium">{stats.watched}</p>
+            <p className="text-xs text-neutral-600">Watched</p>
+          </div>
+          <div className="w-px bg-neutral-800" />
+          <div className="flex flex-col items-center gap-1 w-16">
+            <p className="text-neutral-400 font-medium">{stats.likes}</p>
+            <p className="text-xs text-neutral-600">Likes</p>
+          </div>
+        </div>
+        <div className="h-px w-full bg-neutral-800" />
+        <div className="flex flex-col gap-2 w-full text-sm text-neutral-400">
+          <div className="text-neutral-100 flex items-center gap-2 text-lg">
+            <Popcorn className="w-4.5 h-4.5" />
+            Recommended for you
+          </div>
+          Based on your viewing history and preferences
+        </div>
+        <div className="grid grid-cols-6 gap-2">
+          {films.map((film) => (
+            <div key={film.title} className="relative">
+              <img
+                src={`https://image.tmdb.org/t/p/w500/${film.poster_path}`}
+                alt={film.title}
+                className="w-full h-auto rounded-lg"
+              />
+
+              <div className="absolute top-2 right-2 flex items-center gap-1 px-1 py-0.5 bg-black/50 backdrop-blur-xs rounded-lg">
+                <Star className="w-2 h-2 text-yellow-500 fill-current" />
+                <span className="text-xs font-medium text-neutral-100">
+                  {(film.tmdb_vote_avg / 2).toFixed(1)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
