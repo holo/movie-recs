@@ -3,6 +3,8 @@
 import { Search, Popcorn, Star } from "lucide-react";
 import { useState } from "react";
 
+// *** tmdb_vote_avg is placeholder ***
+
 const films = [
   {
     title: "Interstellar",
@@ -871,41 +873,56 @@ const stats = {
 
 export default function Home() {
   const [username, setUsername] = useState("");
+  const [picked, setPicked] = useState<null | (typeof films)[0]>(null);
+  const [closing, setClosing] = useState(false);
+
+  function close() {
+    setClosing(true);
+
+    setTimeout(() => {
+      setPicked(null);
+      setClosing(false);
+    }, 250);
+  }
 
   return (
-    <div className="flex min-h-screen items-center bg-neutral-950 bg-dotted flex-col pt-48 px-64 gap-6">
+    <div className="flex min-h-screen items-center bg-neutral-950 bg-dotted flex-col pt-48 px-4 sm:px-64 gap-6">
       <main className="flex flex-col gap-6 max-w-104">
-        <h1 className="text-center font-medium text-6xl leading-14 text-neutral-50 ">
-          Hero text here{" "}
+        <h1 className="text-center font-medium text-5xl sm:text-6xl leading-16 text-neutral-50">
+          Find your next{" "}
           <span className="bg-linear-to-r from-zinc-200 to-zinc-500 bg-clip-text text-transparent">
-            KEYWORD
+            FAVOURITE
           </span>
         </h1>
         <p className="text-neutral-400 text-center">
           Enter your Letterboxd username and discover films tailored to your
           taste
         </p>
-        <div className="w-full flex bg-neutral-900 border border-neutral-800 rounded-2xl p-2 text-neutral-600 items-center justify-between">
-          <div className="flex gap-2.5 p-2 items-center">
+        <form className="w-full flex flex-col sm:flex-row bg-neutral-900 border border-neutral-800 rounded-2xl p-2 text-neutral-600 gap-2">
+          <div className="flex-1 flex items-center gap-2.5 px-2 py-2">
             <Search className="text-neutral-500 w-5 h-5" />
             <input
               type="text"
               placeholder="Enter username..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className={`bg-transparent outline-none ${
-                username ? "text-neutral-400" : "text-neutral-600"
+              className={`w-full bg-transparent outline-none ${
+                username ? "text-neutral-300" : "text-neutral-600"
               }`}
             />
           </div>
           <button
-            className={`px-4 py-3 text-neutral-900 font-medium rounded-xl transition-colors duration-300 cursor-pointer ${
-              username ? "bg-neutral-100" : "bg-neutral-400"
+            type="submit"
+            disabled={!username}
+            className={`px-4 py-3 text-neutral-900 font-medium rounded-xl transition-colors duration-300 ${
+              username
+                ? "bg-neutral-100 hover:bg-neutral-200"
+                : "bg-neutral-400 text-neutral-500 cursor-not-allowed"
             }`}
           >
             Discover
           </button>
-        </div>
+        </form>
       </main>
 
       {/* results */}
@@ -934,25 +951,95 @@ export default function Home() {
           </div>
           Based on your viewing history and preferences
         </div>
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {films.map((film) => (
-            <div key={film.title} className="relative">
+            <div
+              key={film.title}
+              className="relative cursor-pointer"
+              onClick={() => setPicked(film)}
+            >
               <img
                 src={`https://image.tmdb.org/t/p/w500/${film.poster_path}`}
                 alt={film.title}
                 className="w-full h-auto rounded-lg"
               />
 
-              <div className="absolute top-2 right-2 flex items-center gap-1 px-1 py-0.5 bg-black/50 backdrop-blur-xs rounded-lg">
-                <Star className="w-2 h-2 text-yellow-500 fill-current" />
+              <div className="absolute top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/50 backdrop-blur-xs rounded-lg">
                 <span className="text-xs font-medium text-neutral-100">
                   {(film.tmdb_vote_avg / 2).toFixed(1)}
                 </span>
+                <Star className="w-2 h-2 text-yellow-500 fill-current" />
               </div>
             </div>
           ))}
         </div>
       </section>
+
+      {picked && (
+        <>
+          <div
+            className={`fixed inset-0 bg-black/50 z-99 backdrop-blur-xs ${closing ? "animate-fade-out" : "animate-fade-in"}`}
+            onClick={close}
+          />
+
+          <div
+            className={`z-100 fixed left-0 right-0 bottom-0 overflow-y-auto bg-neutral-900 rounded-t-3xl ${closing ? "animate-slide-down" : "animate-slide-up"}`}
+          >
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 h-1 rounded-full w-24 bg-neutral-900 z-101" />
+
+            <div className="relative">
+              <img
+                src={`https://image.tmdb.org/t/p/w500/${picked.backdrop_path}`}
+                className="w-full h-auto"
+              />
+
+              <div className="absolute inset-0 bg-linear-to-b from-transparent to-95% to-neutral-900" />
+            </div>
+
+            <div className="flex flex-col px-4 pb-8 gap-4.5">
+              <div className="flex flex-col gap-2 text-xl">
+                <div className="flex justify-between text-neutral-100 font-medium">
+                  {picked.title}
+                  <div className="flex gap-1 font-normal items-center">
+                    {(picked.tmdb_vote_avg / 2).toFixed(1)}
+                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                  </div>
+                </div>
+
+                <p className="text-xs font-light text-neutral-600">
+                  {picked.release_year} • Directed by{" "}
+                  <span className="underline">{picked.director}</span>
+                </p>
+              </div>
+
+              <p className="font-light text-xs text-neutral-400">
+                {picked.overview}
+              </p>
+
+              <div className="flex gap-3 font-light text-xs text-neutral-500 underline">
+                {picked.top_cast.slice(0, 3).map((actor) => (
+                  <p key={actor}>{actor}</p>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                {picked.genres.map((genre) => (
+                  <div
+                    key={genre}
+                    className="border border-neutral-800 bg-neutral-900 rounded-sm text-neutral-500 px-1.5 py-1 uppercase text-xs"
+                  >
+                    {genre}
+                  </div>
+                ))}
+              </div>
+
+              <button className="w-full px-4 py-3 text-neutral-900 font-medium rounded-xl bg-neutral-100">
+                Add to Watchlist
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
