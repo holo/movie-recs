@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, Popcorn, Star } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 // *** tmdb_vote_avg is placeholder ***
 
@@ -982,8 +982,9 @@ export default function Home() {
             onClick={close}
           />
 
+          {/* mobile card */}
           <div
-            className={`z-100 fixed left-0 right-0 bottom-0 overflow-y-auto bg-neutral-900 rounded-t-3xl ${closing ? "animate-slide-down" : "animate-slide-up"}`}
+            className={`md:hidden z-100 fixed left-0 right-0 bottom-0 overflow-y-auto bg-neutral-900 rounded-t-3xl ${closing ? "animate-slide-down" : "animate-slide-up"}`}
           >
             <div className="absolute top-2 left-1/2 -translate-x-1/2 h-1 rounded-full w-24 bg-neutral-900 z-101" />
 
@@ -1036,6 +1037,87 @@ export default function Home() {
               <button className="w-full px-4 py-3 text-neutral-900 font-medium rounded-xl bg-neutral-100">
                 Add to Watchlist
               </button>
+            </div>
+          </div>
+
+          {/* desktop card */}
+          <div
+            className="hidden md:grid place-items-center fixed inset-0 z-100"
+            onClick={close}
+          >
+            <div
+              className={`relative w-3xl bg-neutral-900 rounded-3xl border border-neutral-800 overflow-hidden ${closing ? "animate-slide-down" : "animate-slide-up"}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative">
+                <img
+                  src={`https://image.tmdb.org/t/p/w1280/${picked.backdrop_path}`}
+                  className="w-full h-auto"
+                />
+
+                <div className="absolute inset-0 bg-linear-to-b from-transparent to-95% to-neutral-900" />
+              </div>
+
+              <div className="flex flex-col px-4 pb-4 gap-4">
+                <div className="flex gap-8">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between text-neutral-100">
+                      <h3 className="items-center font-medium text-xl">
+                        {picked.title}{" "}
+                        <span className="font-light">
+                          ({picked.release_year})
+                        </span>
+                      </h3>
+                      <div className="flex gap-1 px-2 py-1 bg-black/50 rounded-2xl items-center">
+                        {(picked.tmdb_vote_avg / 2).toFixed(1)}
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      </div>
+                    </div>
+
+                    <p className="font-light text-neutral-400 text-xs leading-4.5">
+                      {picked.overview}
+                    </p>
+
+                    <div className="flex gap-2">
+                      {picked.genres.map((genre) => (
+                        <div
+                          key={genre}
+                          className="border border-neutral-800 bg-neutral-900 rounded-sm text-neutral-500 px-1.5 py-1 uppercase text-xs"
+                        >
+                          {genre}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col min-w-32 gap-4">
+                    <div className="flex flex-col gap-2 text-xs text-neutral-500">
+                      <span className="font-medium tracking-widest uppercase">
+                        Director
+                      </span>
+                      <span className="font-light">{picked.director}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-2 text-xs text-neutral-500">
+                      <span className="font-medium tracking-widest uppercase">
+                        Cast
+                      </span>
+                      {picked.top_cast.slice(0, 3).map((actor, idx, arr) => (
+                        <Fragment key={actor}>
+                          <span className="font-light">{actor}</span>
+                          {idx < arr.length - 1 && (
+                            <span className="h-px bg-neutral-800 w-full" />
+                          )}
+                        </Fragment>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <button className="w-full py-3 text-neutral-900 font-medium rounded-xl bg-neutral-100">
+                  Add to Watchlist
+                </button>
+              </div>
             </div>
           </div>
         </>
